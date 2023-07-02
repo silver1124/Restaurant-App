@@ -1,0 +1,88 @@
+<html>
+    <body>
+        <form onsubmit = "savenow(event)">
+            <label>Choose Price :</label>
+            <input type="number" name="Price" id = "idprice" required/>
+            <label>Choose Dish :</label>
+            <input type = "text" name="Dish" id = "iddish" required/>
+            <label>Choose a Table :</label>
+            <select name = "Tables" id = "idtable">
+                <option>Table 1</option>
+                <option>Table 2</option>
+                <option>Table 3</option>
+            </select>
+            <button>Add to bill</button>
+        </form>
+
+        <h1>Orders</h1>
+        <h2 id="table1">Table 1</h2>
+        <h2 id="table2">Table 2</h2>
+        <h2 id="table3">Table 3</h2>
+        
+        <ul id="listofdish"></ul>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+        <script>
+            function savenow(event){
+                event.preventDefault();
+
+                const rprice = document.getElementById("idprice").value;
+                const rdish = document.getElementById("iddish").value;
+                const rtable = document.getElementById("idtable").value;
+
+                const rest = { Price: rprice, Dish: rdish, Tables: rtable };
+                    
+                axios.post("https://crudcrud.com/api/7c3da184bd624fc8b607b5d65cbb3047/orders", rest)
+                .then((response)=>{
+                    onscreenuser(response.data);
+                })
+                .catch(err => console.log(err))
+            }
+
+            window.addEventListener("DOMContentLoaded",()=>{
+                axios.get("https://crudcrud.com/api/7c3da184bd624fc8b607b5d65cbb3047/orders")
+                .then((response)=>{
+                    console.log(response);
+                    for (var i=0; i<response.data.length; i++){
+                        onscreenuser(response.data[i])
+                    }
+                })
+                .catch(err=>{console.log(err)});
+            });     
+                
+            function onscreenuser(user){
+                document.getElementById("idprice").value='';
+                document.getElementById("iddish").value='';
+                document.getElementById("idtable").value='';
+
+                if (localStorage.getItem(user.Dish) !== null){
+                    removetheuser(user.Dish)
+                }
+                
+                const tableId = user.Tables.toLowerCase().replace(" ", "");
+                const tableSection = document.getElementById(tableId);
+                const tableData = `<li id="${user._id}">${user.Price}-${user.Dish}-${user.Tables}
+                    <button onclick="deleteuser('${user._id}')"> Delete</button>
+                    </li>`;;
+                tableSection.innerHTML += tableData;
+            };
+
+            function deleteuser(userid){
+                axios.delete(`https://crudcrud.com/api/7c3da184bd624fc8b607b5d65cbb3047/orders/${userid}`)
+                .then((response)=>{
+                    removetheuser(userid)
+                })
+                .catch(err => console.log(err))
+            }
+
+            function removetheuser(userid){
+                const tableSection = document.getElementById("listofdish");
+                const tableData = document.getElementById(userid);
+                if (tableData){
+                    tableSection.removeChild(tableData);
+                }
+            }
+
+        </script>
+        
+    </body>
+</html>
